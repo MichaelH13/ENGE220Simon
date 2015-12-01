@@ -10,13 +10,13 @@ module simon(output [7:0] lcd_data,
 	reg lcd_string_print;
 	wire lcd_string_available;
 	wire random;
-	assign enable = ~SimonBtnTL | ~SimonBtnTR | ~SimonBtnBL | ~SimonBtnBR;
-	wire [1:0] btnColor = tlPressed ? 0 : blPressed ? 2 : trPressed ? 1 : brPressed ? 3 : -1;
+	wire tlPressed, trPressed, blPressed, brPressed;
+	wire tlHeld, trHeld, blHeld, brHeld;
+	assign enable = tlHeld | blHeld | trHeld | brHeld;
+	wire [2:0] btnColor = tlHeld ? 0 : blHeld ? 2 : trHeld ? 1 : brHeld ? 3 : 4;
 	
 	// NOT IMPLEMENTED YET:
 	wire step, rerun;
-	wire tlPressed, trPressed, blPressed, brPressed;
-	wire tlHeld, trHeld, blHeld, brHeld;
 	assign step = 0;
 	assign rerun = 0;
 	
@@ -33,6 +33,11 @@ module simon(output [7:0] lcd_data,
 		 if (timer == 1) begin
 			topline    <= "Welcome to Simon";
 			bottomline <= "Press RED button";
+			lcd_string_print <= 1;
+		 end
+		 if (timer == 100000000) begin
+			topline    <= "Welcome to Simon";
+			bottomline <= {"Random:        ", {7'b0011000, random}};
 			lcd_string_print <= 1;
 		 end
 		 if (timer >= 200000000) begin
@@ -55,7 +60,7 @@ module simon(output [7:0] lcd_data,
 
 	
 	//	module simon_led_ctrl(output reg [2:0] led0, led1, led2, led3, input[1:0] color, input enable, clk);
-	simon_led_ctrl leds(.led0(led0), .led1(led1), .led2(led2), .led3(led3), .color(btnColor), .enable(enable), .clk(clk));
+	simon_led_ctrl leds(.led0(led0), .led1(led1), .led2(led2), .led3(led3), .color(btnColor[1:0]), .enable(enable), .clk(clk));
 	
 	//module LFSR #(parameter FILL=16'hACE1) (output random, input step, rerun, randomize, clk, reset);
 	LFSR shifter(.random(random), .step(step), .rerun(rerun), .randomize(tlHeld), .clk(clk), .reset(reset));
