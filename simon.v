@@ -32,7 +32,7 @@ module simon(output [7:0] lcd_data,
 		 lcd_string_print <= 0;
 		 if (timer == 1) begin
 			topline    <= "Welcome to Simon";
-			bottomline <= "Press RED button";
+			bottomline <= "Press GRN button";
 			lcd_string_print <= 1;
 		 end
 		 if (timer == 100000000) begin
@@ -65,5 +65,71 @@ module simon(output [7:0] lcd_data,
 	//module LFSR #(parameter FILL=16'hACE1) (output random, input step, rerun, randomize, clk, reset);
 	LFSR shifter(.random(random), .step(step), .rerun(rerun), .randomize(tlHeld), .clk(clk), .reset(reset));
 
+	localparam INIT = 0,
+				  IDLE = 1,
+				  RANDOMIZE = 2,
+				  SIMON_PLAY = 3,
+				  SIMON_REST = 3,
+				  SIMON_CHECK = 4,
+				  SIMON_SIMON_NEXT = 5,
+				  PLAYER_INIT = 6,
+				  PLAYER_ENTRY = 7,
+				  PLAYER_RELEASE = 8,
+				  PLAYER_CHECK = 9,
+				  PLAYER_LOSE = 10;
+				  
+	reg [3:0] state, next_state;
+					 
+	always @* begin
+		next_state = state;
+	  
+		case (state) 
+			INIT: begin
+			end
+			
+			IDLE: begin
+			end
+			
+			RANDOMIZE: begin
+			end
+			
+			SIMON_PLAY: begin
+			end
+			
+			SIMON_REST: begin
+			end
+			
+			SIMON_CHECK: begin
+			end
+			
+			SIMON_SIMON_NEXT: begin
+			end
+			
+			PLAYER_INIT: begin
+			end
+			
+			PLAYER_ENTRY: begin
+			end
+			
+			PLAYER_RELEASE: begin
+			end
+			
+			PLAYER_CHECK: begin
+			end
+			
+			PLAYER_LOSE: begin
+			end
+			
+	  endcase
+	end
+
+	always @ (posedge clk or posedge reset) begin
+	  if (reset) begin
+		 state <= INIT;
+	  end
+	  else begin
+		 state <= next_state;
+	  end
+	end
 
 endmodule
