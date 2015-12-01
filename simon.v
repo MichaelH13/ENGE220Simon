@@ -9,7 +9,8 @@ module simon(output [7:0] lcd_data,
 	reg [27:0] timer;
 	reg lcd_string_print;
 	wire lcd_string_available;
-	assign enable = SimonBtnTL | SimonBtnTR | SimonBtnBL | SimonBtnBR;
+	assign enable = ~SimonBtnTL | ~SimonBtnTR | ~SimonBtnBL | ~SimonBtnBR;
+	wire [1:0] btnColor = ~SimonBtnTL ? 0 : ~SimonBtnBL ? 2 : ~SimonBtnTR ? 1 : ~SimonBtnBR ? 3 : -1;
 	
 	always @(posedge clk or posedge reset) begin
 	  if (reset) begin
@@ -37,6 +38,6 @@ module simon(output [7:0] lcd_data,
 					.print(lcd_string_print), .topline(topline), .bottomline(bottomline), .reset(reset), .clk(clk));
 	
 	//	module simon_led_ctrl(output reg [2:0] led0, led1, led2, led3, input[1:0] color, input enable, clk);
-	simon_led_ctrl leds(.led0(led0), .led1(led1), .led2(led2), .led3(led3), .color(), .enable(enable), .clk(clk));
+	simon_led_ctrl leds(.led0(led0), .led1(led1), .led2(led2), .led3(led3), .color(btnColor), .enable(enable), .clk(clk));
 
 endmodule

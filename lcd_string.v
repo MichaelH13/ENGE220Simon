@@ -10,16 +10,16 @@
 module lcd_string(output lcd_regsel, lcd_read, lcd_enable, inout [7:0] lcd_data, 
                   output reg available,
                   input print, input [8*16-1:0] topline, bottomline, input reset, clk );
-localparam INIT = 0, FUNCTION_SET = 1, WAIT = 2, ENTRY_MODE_SET = 3, 
-           DISPLAY_ON = 4, ENABLE = 5, CLEAR_DISPLAY = 6, RETURN_HOME = 7, 
-			  PRINT_LINE_1 = 8, PRINT_LINE_1_ADDR = 9, PRINT_LINE_1_CHAR = 10,
-			  PRINT_LINE_2 = 11, PRINT_LINE_2_ADDR = 12, PRINT_LINE_2_CHAR = 13;
-reg [7:0] state, next_state;
-reg [7:0] pending_state, next_pending_state;
-reg [7:0] data;
-reg activate, regsel;
-reg [7:0] address, next_address;
-reg [8*16-1:0] line1, line2, next_line1, next_line2;
+	localparam INIT = 0, FUNCTION_SET = 1, WAIT = 2, ENTRY_MODE_SET = 3, 
+				  DISPLAY_ON = 4, ENABLE = 5, CLEAR_DISPLAY = 6, RETURN_HOME = 7, 
+				  PRINT_LINE_1 = 8, PRINT_LINE_1_ADDR = 9, PRINT_LINE_1_CHAR = 10,
+				  PRINT_LINE_2 = 11, PRINT_LINE_2_ADDR = 12, PRINT_LINE_2_CHAR = 13;
+	reg [7:0] state, next_state;
+	reg [7:0] pending_state, next_pending_state;
+	reg [7:0] data;
+	reg activate, regsel;
+	reg [7:0] address, next_address;
+	reg [8*16-1:0] line1, line2, next_line1, next_line2;
 
 // Instantiate the lcd controller. 
 lcd_ctrl lcd1 (.lcd_regsel(lcd_regsel), .lcd_read(lcd_read), .lcd_enable(lcd_enable), .lcd_data(lcd_data), 

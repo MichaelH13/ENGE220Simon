@@ -1,23 +1,3 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    11:26:59 11/21/2015 
-// Design Name: 
-// Module Name:    select_simon_button 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
 module select_simon_button(output reg [2:0] TL_LED, TR_LED, BL_LED, BR_LED, 
 									input [3:0] button,
 									input button_en);
