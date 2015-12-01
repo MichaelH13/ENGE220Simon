@@ -9,8 +9,14 @@ module simon(output [7:0] lcd_data,
 	reg [27:0] timer;
 	reg lcd_string_print;
 	wire lcd_string_available;
+	wire random;
 	assign enable = ~SimonBtnTL | ~SimonBtnTR | ~SimonBtnBL | ~SimonBtnBR;
 	wire [1:0] btnColor = ~SimonBtnTL ? 0 : ~SimonBtnBL ? 2 : ~SimonBtnTR ? 1 : ~SimonBtnBR ? 3 : -1;
+	
+	// NOT IMPLEMENTED YET:
+	wire step, rerun;
+	assign step = 0;
+	assign rerun = 0;
 	
 	always @(posedge clk or posedge reset) begin
 	  if (reset) begin
@@ -39,5 +45,8 @@ module simon(output [7:0] lcd_data,
 	
 	//	module simon_led_ctrl(output reg [2:0] led0, led1, led2, led3, input[1:0] color, input enable, clk);
 	simon_led_ctrl leds(.led0(led0), .led1(led1), .led2(led2), .led3(led3), .color(btnColor), .enable(enable), .clk(clk));
+	
+	//module LFSR #(parameter FILL=16'hACE1) (output random, input step, rerun, randomize, clk, reset);
+	LFSR shifter(.random(random), .step(step)
 
 endmodule
