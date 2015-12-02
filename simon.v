@@ -5,15 +5,40 @@ module simon(output [7:0] lcd_data,
 				 input SimonBtnTL, SimonBtnTR, SimonBtnBL, SimonBtnBR,
 				 input clk, reset);
 	
+	// State-machine variables.
+	localparam IDLE = 0,
+				  RANDOMIZE = 2,
+				  SIMON_PLAY = 3,
+				  SIMON_REST = 3,
+				  SIMON_CHECK = 4,
+				  SIMON_SIMON_NEXT = 5,
+				  PLAYER_INIT = 6,
+				  PLAYER_ENTRY = 7,
+				  PLAYER_RELEASE = 8,
+				  PLAYER_CHECK = 9,
+				  PLAYER_LOSE = 10;
+				  
+	reg [3:0] state, next_state;
+	
+	// LCD Variables.
 	reg [8*16-1:0] topline, bottomline;
 	reg [27:0] timer;
 	reg lcd_string_print;
 	wire lcd_string_available;
+	
+	// Buttons, color, random generator.
 	wire random;
 	wire tlPressed, trPressed, blPressed, brPressed;
 	wire tlHeld, trHeld, blHeld, brHeld;
 	assign enable = tlHeld | blHeld | trHeld | brHeld;
 	wire [2:0] btnColor = tlHeld ? 0 : blHeld ? 2 : trHeld ? 1 : brHeld ? 3 : 4;
+	
+	// Keep track of score.
+	reg [7:0] scoreBinary;
+	wire [7:0] upperScore, lowerScore;
+	assign upperScore = {4'b0011, scoreBinary[7:4]};
+	assign lowerScore = {4'b0011, scoreBinary[3:0]};
+	wire [15:0] displayScore = {upperScore, lowerScore};
 	
 	// NOT IMPLEMENTED YET:
 	wire step, rerun;
@@ -21,29 +46,33 @@ module simon(output [7:0] lcd_data,
 	assign rerun = 0;
 	
 	always @(posedge clk or posedge reset) begin
-	  if (reset) begin
-		 timer <= 0;
-		 lcd_string_print <= 0;
-	  end
-	  else begin
-		 if (lcd_string_available) begin
-			timer <= timer + 1;
-		 end
-		 lcd_string_print <= 0;
-		 if (timer == 1) begin
-			topline    <= "Welcome to Simon";
-			bottomline <= "Press GRN button";
-			lcd_string_print <= 1;
-		 end
-		 if (timer == 100000000) begin
-			topline    <= "Welcome to Simon";
-			bottomline <= {"Random:        ", {7'b0011000, random}};
-			lcd_string_print <= 1;
-		 end
-		 if (timer >= 200000000) begin
+		if (reset) begin
 			timer <= 0;
-		 end
-	  end
+			lcd_string_print <= 0;
+			
+		end
+		else begin
+		if (lcd_string_available) begin
+			timer <= timer + 1;
+			
+		end
+		lcd_string_print <= 0;
+		if (timer == 1) begin
+			if (state == IDLE) begin
+				topline    <= "Welcome to Simon";
+				bottomline <= "Press GRN button";
+				lcd_string_print <= 1;
+			end else if (state == RANDOMIZE) begin
+				topline    <= "Instructions:   ";
+				bottomline <= {"Your Score:   ", displayScore};
+				lcd_string_print <= 1;
+			end
+		end
+			if (timer >= 20000000) begin
+				timer <= 0;
+
+			end
+		end
 	end
 
 	// DEBOUNCE SIMON BUTTONS
@@ -64,30 +93,13 @@ module simon(output [7:0] lcd_data,
 	
 	//module LFSR #(parameter FILL=16'hACE1) (output random, input step, rerun, randomize, clk, reset);
 	LFSR shifter(.random(random), .step(step), .rerun(rerun), .randomize(tlHeld), .clk(clk), .reset(reset));
-
-	localparam INIT = 0,
-				  IDLE = 1,
-				  RANDOMIZE = 2,
-				  SIMON_PLAY = 3,
-				  SIMON_REST = 3,
-				  SIMON_CHECK = 4,
-				  SIMON_SIMON_NEXT = 5,
-				  PLAYER_INIT = 6,
-				  PLAYER_ENTRY = 7,
-				  PLAYER_RELEASE = 8,
-				  PLAYER_CHECK = 9,
-				  PLAYER_LOSE = 10;
-				  
-	reg [3:0] state, next_state;
 					 
 	always @* begin
 		next_state = state;
 	  
 		case (state) 
-			INIT: begin
-			end
-			
-			IDLE: begin
+			IDLE: begin // Wait for button press
+				if (tlHeld) next_state = RANDOMIZE;
 			end
 			
 			RANDOMIZE: begin
