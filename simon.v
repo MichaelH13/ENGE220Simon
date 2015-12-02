@@ -26,8 +26,11 @@ module simon(output [7:0] lcd_data,
 	reg lcd_string_print;
 	wire lcd_string_available;
 	
-	// Buttons, color, random generator.
+	// Random sequence memory for both simon and human.
 	wire random;
+	reg [7:0] playedSimonBtnCounter;
+	
+	// Buttons, color.
 	wire tlPressed, trPressed, blPressed, brPressed;
 	wire tlHeld, trHeld, blHeld, brHeld;
 	assign enable = tlHeld | blHeld | trHeld | brHeld;
@@ -41,9 +44,7 @@ module simon(output [7:0] lcd_data,
 	wire [15:0] displayScore = {upperScore, lowerScore};
 	
 	// NOT IMPLEMENTED YET:
-	wire step, rerun;
-	assign step = 0;
-	assign rerun = 0;
+	reg step, rerun;
 	
 	always @(posedge clk or posedge reset) begin
 		if (reset) begin
@@ -66,6 +67,10 @@ module simon(output [7:0] lcd_data,
 				topline    <= "Instructions:   ";
 				bottomline <= {"Your Score:   ", displayScore};
 				lcd_string_print <= 1;
+			end else if (state == SIMON_PLAY) begin
+				topline    <= "Memorize This...";
+				bottomline <= {"Your Score:   ", displayScore};
+				lcd_string_print <= 1;
 			end
 		end
 			if (timer >= 20000000) begin
@@ -73,6 +78,7 @@ module simon(output [7:0] lcd_data,
 
 			end
 		end
+	
 	end
 
 	// DEBOUNCE SIMON BUTTONS
@@ -92,7 +98,7 @@ module simon(output [7:0] lcd_data,
 	simon_led_ctrl leds(.led0(led0), .led1(led1), .led2(led2), .led3(led3), .color(btnColor[1:0]), .enable(enable), .clk(clk));
 	
 	//module LFSR #(parameter FILL=16'hACE1) (output random, input step, rerun, randomize, clk, reset);
-	LFSR shifter(.random(random), .step(step), .rerun(rerun), .randomize(tlHeld), .clk(clk), .reset(reset));
+	LFSR shifter(.random(random), .step(step), .rerun(rerun), .randomize(tlHeld && state == RANDOMIZE), .clk(clk), .reset(reset));
 					 
 	always @* begin
 		next_state = state;
@@ -103,9 +109,11 @@ module simon(output [7:0] lcd_data,
 			end
 			
 			RANDOMIZE: begin
+				if (~tlHeld) next_state = SIMON_PLAY;
 			end
 			
 			SIMON_PLAY: begin
+				
 			end
 			
 			SIMON_REST: begin
@@ -137,7 +145,7 @@ module simon(output [7:0] lcd_data,
 
 	always @ (posedge clk or posedge reset) begin
 	  if (reset) begin
-		 state <= INIT;
+		 state <= IDLE;
 	  end
 	  else begin
 		 state <= next_state;
