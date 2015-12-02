@@ -28,6 +28,8 @@ module simon(output [7:0] lcd_data,
 	
 	// Random sequence memory for both simon and human.
 	wire random;
+	reg newTone;
+	reg [1:0] tone;
 	reg [7:0] playedSimonBtnCounter;
 	
 	// Buttons, color.
@@ -71,11 +73,22 @@ module simon(output [7:0] lcd_data,
 				topline    <= "Memorize This...";
 				bottomline <= {"Your Score:   ", displayScore};
 				lcd_string_print <= 1;
+				
+				// TODO: FINISH THIS
+				if (playedSimonBtnCounter <= binaryScore) begin
+					step <= 1;
+					// if we have a new tone, play it.
+					if (newTone) begin
+						tone[1] <= random;
+					end
+					tone[0] <= random;
+					newTone <= newTone + 1;
+				end
 			end
 		end
 			if (timer >= 20000000) begin
 				timer <= 0;
-
+				
 			end
 		end
 	
@@ -113,7 +126,7 @@ module simon(output [7:0] lcd_data,
 			end
 			
 			SIMON_PLAY: begin
-				
+			
 			end
 			
 			SIMON_REST: begin
