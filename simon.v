@@ -42,8 +42,8 @@ module simon(output [7:0] lcd_data,
 	
 	assign LED0 = random[0];
 	assign LED1 = random[1];
-	assign LED6 = btnColor[0];
-	assign LED7 = btnColor[1];
+	assign LED6 = lastBtn[0];
+	assign LED7 = lastBtn[1];
 	
 	// Keep track of score.
 	reg [7:0] scoreBinary;
@@ -56,7 +56,17 @@ module simon(output [7:0] lcd_data,
 	// Speaker.
 	reg speaker_en;
 	
+	// Debugging info.
+	reg [30:0] delayTimer;
+	reg delayed, delay_en;
+	
 	always @(posedge clk or posedge reset) begin
+		
+		topline    <= "0000000000000000";
+		bottomline <= "0000000000000000";
+		topline    <= "1111111111111111";
+		bottomline <= "1111111111111111";
+					
 		if (reset) begin
 			timer <= 0;
 			secondTimer <= 0;
@@ -110,6 +120,16 @@ module simon(output [7:0] lcd_data,
 			end
 			if (timer >= 20000000) begin
 				timer <= 0;
+			end
+			
+			if (delay_en) begin
+				if (delayTimer < 100000000) begin
+					delayed <= 0;
+					delayTimer <= delayTimer + 1;
+				end else begin
+					delayTimer <= 0;
+					delayed <= 1;
+				end
 			end
 			
 			secondTimer <= secondTimer < 50000000 && (state != RANDOMIZE) ? secondTimer + 1 : 0;
@@ -222,23 +242,27 @@ module simon(output [7:0] lcd_data,
 			
 			PLAYER_CHECK: begin
 				// correct guess.
-				if (lastBtn == random) begin
-					playedPlayerBtnCounter = playedPlayerBtnCounter + 1;
-					stepGuessed = 1;
-					// if we still have more buttons to guess, then loop back to accept more guesses.
-					if (playedPlayerBtnCounter <= scoreBinary) begin
-						next_state = PLAYER_ENTRY;
+				delay_en = 1;
+				
+				if (delayed) begin
+					if (lastBtn == random) begin
+						playedPlayerBtnCounter = playedPlayerBtnCounter + 1;
+						stepGuessed = 1;
+						// if we still have more buttons to guess, then loop back to accept more guesses.
+						if (playedPlayerBtnCounter <= scoreBinary) begin
+							next_state = PLAYER_ENTRY;
+						end
+						else begin
+							// end of correct sequence, so add to our score and reset for the larger sequence.
+							scoreBinary = scoreBinary + 1; // incrementing our score.
+							next_state = SIMON_PLAY; // start playing the sequence again.
+							rerun = 1; // reset the sequence generator.
+						end
 					end
 					else begin
-						// end of correct sequence, so add to our score and reset for the larger sequence.
-						scoreBinary = scoreBinary + 1; // incrementing our score.
-						next_state = SIMON_PLAY; // start playing the sequence again.
-						rerun = 1; // reset the sequence generator.
+						next_state = PLAYER_LOSE;
 					end
 				end
-				else begin
-					next_state = PLAYER_LOSE;
-				end	
 			end
 			
 			PLAYER_LOSE: begin
