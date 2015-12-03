@@ -2,14 +2,14 @@
 NET "clk" LOC = B8;
 
 // Nexys LEDS
-#NET "LEDJ14" LOC = J14;
-#NET "LEDJ15" LOC = J15;
+NET "LED0" LOC = J14;
+NET "LED1" LOC = J15;
 #NET "LEDK15" LOC = K15;
 #NET "LEDK14" LOC = K14;
 #NET "LEDE17" LOC = E17;
 #NET "LEDP15" LOC = P15;
-#NET "LEDF4" LOC = F4;
-#NET "LEDR4" LOC = R4;
+NET "LED6" LOC = F4;
+NET "LED7" LOC = R4;
 
 // Nexys Switches
 NET "reset" LOC = G18;
@@ -90,4 +90,4 @@ NET "led3[1]" LOC = F12;
 NET "led3[2]" LOC = E12;
 
 #simon speaker
-#NET "speaker" LOC = B16;
+NET "speaker" LOC = B16;

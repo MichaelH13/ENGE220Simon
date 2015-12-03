@@ -3,7 +3,6 @@
 
 //`define tone_440 (113636)
 
-//module speaker(output reg speaker, input [3:0] nexus_buttons, input clk);
 module speaker(output reg speaker, input [2:0] tone, input speaker_en, clk);
 
 	reg [16:0] count;
