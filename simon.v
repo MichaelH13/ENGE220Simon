@@ -1,7 +1,8 @@
-module simon(output [7:0] lcd_data, 
+module simon(output [7:0] lcd_data, segments_n,
+				 output [3:0] anodes,
 				 output [2:0] led0, led1, led2, led3,
-				 output lcd_regsel, lcd_read, lcd_enable, speaker, LED0, LED1, LED6, LED7,
-				 input SimonBtnTL, SimonBtnTR, SimonBtnBL, SimonBtnBR,
+				 output lcd_regsel, lcd_read, lcd_enable, speaker, nLED0, nLED1, nLED4, nLED6, nLED7, 
+				 input SimonBtnTL, SimonBtnTR, SimonBtnBL, SimonBtnBR, nBTN0_step_state,
 				 input clk, reset);
 	
 	// State-machine variables.
@@ -28,45 +29,40 @@ module simon(output [7:0] lcd_data,
 	// Random sequence memory for both simon and human.
 	wire [1:0] random;
 	reg [7:0] playedSimonBtnCounter, playedPlayerBtnCounter;
-	reg stepPlay, stepGuessed, rerun, randomize;
+	reg stepPlay, stepGuessed, rerun, randomize, stepGuessed_en;
 	wire step = stepPlay | stepGuessed;
 
 	// Buttons, color.
 	reg [1:0] lastBtn;
-	wire tlPressed, trPressed, blPressed, brPressed;
+	wire tlPressed;//, trPressed, blPressed, brPressed;
 	wire tlHeld, trHeld, blHeld, brHeld;
 	assign enable = tlHeld | blHeld | trHeld | brHeld | (state == SIMON_PLAY);
 	
 	// if we are playing a sequence, continue to do so, otherwise light up a button if the user is holding it.
 	wire [2:0] btnColor = (state == SIMON_PLAY) ? {1'b0, random} : tlHeld ? 0 : blHeld ? 2 : trHeld ? 1 : brHeld ? 3 : 4;
 	
-	assign LED0 = random[0];
-	assign LED1 = random[1];
-	assign LED6 = lastBtn[0];
-	assign LED7 = lastBtn[1];
+	assign nLED0 = random[0];
+	assign nLED1 = random[1];
+	assign nLED4 = stepPlay;
+	assign nLED6 = lastBtn[0];
+	assign nLED7 = lastBtn[1];
 	
 	// Keep track of score.
-	reg [7:0] scoreBinary;
+	reg [7:0] scoreCounter;
+	reg scoreCounter_en, playedSimonBtnCounter_en, playedPlayerBtnCounter_en;
 	wire [3:0] ones, tens;
-	wire [7:0] upperScore, lowerScore;
-	assign upperScore = {4'b0011, tens};
-	assign lowerScore = {4'b0011, ones};
-	wire [15:0] displayScore = {upperScore, lowerScore};
+	reg [3:0] testCounter;
+	wire [7:0] bcdOnes, bcdTens;
+	assign bcdTens = {4'b0011, tens};
+	assign bcdOnes = {4'b0011, ones};
+	wire [15:0] displayScore = {bcdTens, bcdOnes};
 	
 	// Speaker.
 	reg speaker_en;
 	
-	// Debugging info.
-	reg [30:0] delayTimer;
-	reg delayed, delay_en;
-	
+	// LCD BLOCK
 	always @(posedge clk or posedge reset) begin
 		
-		topline    <= "0000000000000000";
-		bottomline <= "0000000000000000";
-		topline    <= "1111111111111111";
-		bottomline <= "1111111111111111";
-					
 		if (reset) begin
 			timer <= 0;
 			secondTimer <= 0;
@@ -119,23 +115,22 @@ module simon(output [7:0] lcd_data,
 				end
 			end
 			if (timer >= 20000000) begin
+				topline    <= "0000000000000000"; //hopefully remove warnings when compiling.
+				bottomline <= "0000000000000000";
 				timer <= 0;
 			end
 			
-			if (delay_en) begin
-				if (delayTimer < 100000000) begin
-					delayed <= 0;
-					delayTimer <= delayTimer + 1;
-				end else begin
-					delayTimer <= 0;
-					delayed <= 1;
-				end
-			end
-			
+			// Only run timer for seconds if we are not in randomize and secondTimer < 50000000.
 			secondTimer <= secondTimer < 50000000 && (state != RANDOMIZE) ? secondTimer + 1 : 0;
 			
-			//Step if we have just finished playing a tone.
-			stepPlay <= (state == SIMON_PLAY) && secondTimer >= 50000000;
+			// Step if we have just finished playing a tone.
+			stepPlay <= !(secondTimer < 50000000) && (state == SIMON_PLAY) ? 1 : 0;
+			stepGuessed <= stepGuessed_en;
+			
+			if (tlPressed) testCounter <= testCounter + 1;
+//			if (scoreCounter_en) scoreCounter <= scoreCounter + 1;
+//			if (playedSimonBtnCounter_en) playedSimonBtnCounter <= playedSimonBtnCounter + 1;
+//			if (playedPlayerBtnCounter_en) playedPlayerBtnCounter <= playedPlayerBtnCounter + 1;
 		end
 		
 	end
@@ -143,10 +138,10 @@ module simon(output [7:0] lcd_data,
 	// DEBOUNCE SIMON BUTTONS
 	// module debouncer(output pressed, held, input button, clk, reset);
 	debouncer tl(.pressed(tlPressed), .held(tlHeld), .button(~SimonBtnTL), .clk(clk), .reset(reset));
-	debouncer tr(.pressed(trPressed), .held(trHeld), .button(~SimonBtnTR), .clk(clk), .reset(reset));
-	debouncer bl(.pressed(blPressed), .held(blHeld), .button(~SimonBtnBL), .clk(clk), .reset(reset));
-	debouncer br(.pressed(brPressed), .held(brHeld), .button(~SimonBtnBR), .clk(clk), .reset(reset));
-
+	debouncer tr(.pressed(), .held(trHeld), .button(~SimonBtnTR), .clk(clk), .reset(reset));
+	debouncer bl(.pressed(), .held(blHeld), .button(~SimonBtnBL), .clk(clk), .reset(reset));
+	debouncer br(.pressed(), .held(brHeld), .button(~SimonBtnBR), .clk(clk), .reset(reset));
+	
 	// LCD DISPLAY
 	lcd_string lcd(.lcd_regsel(lcd_regsel), .lcd_read(lcd_read), .lcd_enable(lcd_enable), .lcd_data(lcd_data), 
 					.available(lcd_string_available),
@@ -164,121 +159,152 @@ module simon(output [7:0] lcd_data,
 	speaker speaker1(.speaker(speaker), .tone({1'b1, random}), .speaker_en(speaker_en), .clk(clk));
 	
 	//module bcd(output reg [3:0] hundreds, tens, ones, input [7:0] number, input clk);
-	bcd bcd1(.hundreds(), .tens(tens), .ones(ones), .number(scoreBinary), .clk(clk));
-					 
+	bcd bcd1(.hundreds(), .tens(tens), .ones(ones), .number(scoreCounter), .clk(clk));
+	
+	//module seg_ctrl(output [7:0] segments_n, output reg [3:0] anodes_n, input[3:0] D,C,B,A, input clk);
+	seg_ctrl seg1(.segments_n(segments_n), .anodes_n(anodes), .D(playedSimonBtnCounter[7:4]),.C(playedSimonBtnCounter[3:0]),.B(playedPlayerBtnCounter[7:4]), .A(playedPlayerBtnCounter[3:0]), .clk(clk));
+	
+	// STATE MACHINE BLOCK.
 	always @* begin
 		// Defaults.
 		next_state = state;
-		stepGuessed = 0;
+		stepGuessed_en = 0;
 		rerun = 0;
 		speaker_en = 0;
 		randomize = tlHeld && state == RANDOMIZE;
+		playedSimonBtnCounter = playedSimonBtnCounter > 0 ? playedSimonBtnCounter : 0;
+		playedPlayerBtnCounter = playedPlayerBtnCounter > 0 ? playedPlayerBtnCounter : 0;
+		scoreCounter = scoreCounter > 0 ? scoreCounter : 0;
 		
 		if (reset) begin
 			playedSimonBtnCounter = 0;
 			playedPlayerBtnCounter = 0;
-			scoreBinary = 0;
+			scoreCounter = 0;
+			lastBtn = 0;
 		end
-
-		case (state) 
-			IDLE: begin // Wait for button press
-				if (tlHeld) next_state = RANDOMIZE;
-			end
-			
-			RANDOMIZE: begin
-				if (~tlHeld) begin
-					next_state = SIMON_PLAY;
+		else begin
+			case (state) 
+				IDLE: begin // Wait for button press
+					if (tlHeld) next_state = RANDOMIZE;
 				end
-			end
-			
-			SIMON_PLAY: begin
-				if (playedSimonBtnCounter <= scoreBinary) begin
-					// play tone
-					// shift for next tone 
-					playedSimonBtnCounter = playedSimonBtnCounter + step; //Add one to our count of how many buttons we have played so far.
-					speaker_en = secondTimer < (50000000 / 4) * 3; //only turn on speaker for 3/4 second.
-				end
-				else begin
-					next_state = SIMON_REST;
-				end
-			end
-			
-			SIMON_REST: begin
-				playedSimonBtnCounter = 0; //reset counter
-				next_state = PLAYER_INIT;
-			end
-			
-			SIMON_CHECK: begin
-			end
-			
-			SIMON_NEXT: begin
-			end
-			
-			PLAYER_INIT: begin
-				// initally the player hasn't made any guesses.
-				// we want to rerun our random generator, so set rerun to 1.
-				playedPlayerBtnCounter = 0;
-				rerun = 1;
-				next_state = PLAYER_ENTRY;
-			end
-			
-			PLAYER_ENTRY: begin
-				if (btnColor != 3'b100) begin
-					// save last button
-					lastBtn = btnColor[1:0];
-					next_state = PLAYER_RELEASE;
-					speaker_en = 1;
-				end
-			end
-			
-			PLAYER_RELEASE: begin
-				// if we have had the button they pressed released, 
-				// then progress to check if it was correct.
-				speaker_en = 1;
-				if (btnColor != {1'b0, lastBtn}) begin
-					next_state = PLAYER_CHECK;
-				end
-			end
-			
-			PLAYER_CHECK: begin
-				// correct guess.
-				delay_en = 1;
 				
-				if (delayed) begin
-					if (lastBtn == random) begin
-						playedPlayerBtnCounter = playedPlayerBtnCounter + 1;
-						stepGuessed = 1;
-						// if we still have more buttons to guess, then loop back to accept more guesses.
-						if (playedPlayerBtnCounter <= scoreBinary) begin
-							next_state = PLAYER_ENTRY;
-						end
-						else begin
-							// end of correct sequence, so add to our score and reset for the larger sequence.
-							scoreBinary = scoreBinary + 1; // incrementing our score.
-							next_state = SIMON_PLAY; // start playing the sequence again.
-							rerun = 1; // reset the sequence generator.
-						end
+				RANDOMIZE: begin
+					if (~tlHeld) begin
+						next_state = SIMON_PLAY;
+					end
+				end
+				
+				SIMON_PLAY: begin
+					if (playedSimonBtnCounter <= scoreCounter) begin
+						// play tone
+						// shift for next tone 
+						playedSimonBtnCounter = playedSimonBtnCounter + step; //Add one to our count of how many buttons we have played so far.
+						speaker_en = secondTimer < (50000000 / 4) * 3; //only turn on speaker for 3/4 second.
 					end
 					else begin
-						next_state = PLAYER_LOSE;
+						next_state = SIMON_REST;
 					end
 				end
-			end
-			
-			PLAYER_LOSE: begin
-				// play losing tone, reset game.
-			end
-			
-	  endcase
+				
+				SIMON_REST: begin
+					playedSimonBtnCounter = 0; //reset counter
+					next_state = PLAYER_INIT;
+				end
+				
+				SIMON_CHECK: begin
+				end
+				
+				SIMON_NEXT: begin
+				end
+				
+				PLAYER_INIT: begin
+					// initally the player hasn't made any guesses.
+					// we want to rerun our random generator, so set rerun to 1.
+					playedPlayerBtnCounter = 0;
+					rerun = 1;
+					next_state = PLAYER_ENTRY;
+				end
+				
+				PLAYER_ENTRY: begin
+					// if a button is held, then save it.
+					if (nBTN0_step_state) begin
+						if (enable) begin
+							// save last button
+							lastBtn = btnColor[1:0];
+							next_state = PLAYER_RELEASE;
+							speaker_en = 1;
+						end
+					end
+				end
+				
+				PLAYER_RELEASE: begin
+					// if we have had the button they pressed released, 
+					// then progress to check if it was correct.
+					speaker_en = 1;
+					if (nBTN0_step_state) begin
+						if (~enable) begin
+							next_state = PLAYER_CHECK;
+						end
+					end
+				end
+				
+				PLAYER_CHECK: begin
+					// correct guess.
+					if (nBTN0_step_state) begin
+						if (lastBtn == random) begin
+							playedPlayerBtnCounter = playedPlayerBtnCounter + 1;
+							stepGuessed_en = 1;
+							// if we still have more buttons to guess, then loop back to accept more guesses.
+							if (playedPlayerBtnCounter <= scoreCounter) begin
+								next_state = PLAYER_ENTRY;
+							end
+							else begin
+								// end of correct sequence, so add to our score and reset for the larger sequence.
+								scoreCounter = scoreCounter + 1; // incrementing our score.
+								next_state = SIMON_PLAY; // start playing the sequence again.
+								rerun = 1; // reset the sequence generator.
+							end
+						end
+						else begin
+							next_state = PLAYER_LOSE;
+						end
+					end
+				end
+				
+				PLAYER_LOSE: begin
+					// play losing tone, reset game.
+					
+					next_state = IDLE;
+					
+				end
+				
+		  endcase
+		end
 	end
 
+	// ITERATE STATES ON EACH CLK CYCLE.
 	always @ (posedge clk or posedge reset) begin
-	  if (reset) begin
-		 state <= IDLE;
-	  end
-	  else begin
-		 state <= next_state;
-	  end
+		
+		
+//		if (secondTimer < 50000000 && (state != RANDOMIZE)) begin
+//			secondTimer <= secondTimer + 1;
+//			stepPlay <= 0;
+//		end
+//		else begin
+//			secondTimer <= 0;
+//			
+//			// Step if we have just finished playing a tone.
+//			if (state == SIMON_PLAY) begin
+//				stepPlay <= 1;
+//			end
+//		end
+		
+		if (reset) begin
+			state <= IDLE;
+		end
+		else begin
+			state <= next_state;
+		end
 	end
 
 endmodule
