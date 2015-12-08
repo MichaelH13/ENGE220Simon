@@ -287,7 +287,7 @@ module simon(output [7:0] lcd_data, segments_n,
 							speaker_en = 1;
 						end
 						else begin
-							if (nBTN0_replay_sequence) begin
+							if (nBTN0_replay_sequence && playedPlayerBtnCounter == 0) begin
 								next_state = SIMON_PLAY;
 								secondTimer_reset = 1;
 							end
