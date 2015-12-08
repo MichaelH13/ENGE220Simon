@@ -2,14 +2,14 @@
 NET "clk" LOC = B8;
 
 // Nexys LEDS
-#NET "LEDJ14" LOC = J14;
-#NET "LEDJ15" LOC = J15;
+NET "nLED0" LOC = J14;
+NET "nLED1" LOC = J15;
 #NET "LEDK15" LOC = K15;
 #NET "LEDK14" LOC = K14;
-#NET "LEDE17" LOC = E17;
+NET "nLED4" LOC = E17;
 #NET "LEDP15" LOC = P15;
-#NET "LEDF4" LOC = F4;
-#NET "LEDR4" LOC = R4;
+NET "nLED6" LOC = F4;
+NET "nLED7" LOC = R4;
 
 // Nexys Switches
 NET "reset" LOC = G18;
@@ -36,20 +36,20 @@ NET "lcd_data[6]" LOC = A4;
 NET "lcd_data[7]" LOC = B4;
 
 // Nexus anodes
-#NET "anodes[0]" LOC = F17;
-#NET "anodes[1]" LOC = H17;
-#NET "anodes[2]" LOC = C18;
-#NET "anodes[3]" LOC = F15;
+NET "anodes[0]" LOC = F17;
+NET "anodes[1]" LOC = H17;
+NET "anodes[2]" LOC = C18;
+NET "anodes[3]" LOC = F15;
 
 // Segments on Nexys
-#NET "segments[0]" LOC = L18;
-#NET "segments[1]" LOC = F18;
-#NET "segments[2]" LOC = D17;
-#NET "segments[3]" LOC = D16;
-#NET "segments[4]" LOC = G14;
-#NET "segments[5]" LOC = J17;
-#NET "segments[6]" LOC = H14;
-#NET "segments[7]" LOC = C17;
+NET "segments_n[0]" LOC = L18;
+NET "segments_n[1]" LOC = F18;
+NET "segments_n[2]" LOC = D17;
+NET "segments_n[3]" LOC = D16;
+NET "segments_n[4]" LOC = G14;
+NET "segments_n[5]" LOC = J17;
+NET "segments_n[6]" LOC = H14;
+NET "segments_n[7]" LOC = C17;
 
 // Simon buttons
 NET "SimonBtnTL" LOC = E11;
@@ -61,13 +61,8 @@ NET "SimonBtnBR" LOC = B13;
 #NET "NexysBtnH13" LOC = H13;
 #NET "NexysBtnE18" LOC = E18;
 #NET "NexysBtnD18" LOC = D18;
-#NET "NexysBtnB18" LOC = B18;
+NET "nBTN0_step_state" LOC = B18;
 
-// Anodes
-#NET "simonTens" LOC = F17;
-#NET "simonOnes" LOC = H17;
-#NET "NexysTens" LOC = C18;
-#NET "NexysOnes" LOC = F15;
 
 //top left button colour 
 NET "led0[0]" LOC = C11;
@@ -90,4 +85,4 @@ NET "led3[1]" LOC = F12;
 NET "led3[2]" LOC = E12;
 
 #simon speaker
-#NET "speaker" LOC = B16;
+NET "speaker" LOC = B16;

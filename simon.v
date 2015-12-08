@@ -2,7 +2,11 @@ module simon(output [7:0] lcd_data, segments_n,
 				 output [3:0] anodes,
 				 output [2:0] led0, led1, led2, led3,
 				 output lcd_regsel, lcd_read, lcd_enable, speaker, nLED0, nLED1, nLED4, nLED6, nLED7, 
+<<<<<<< HEAD
 				 input SimonBtnTL, SimonBtnTR, SimonBtnBL, SimonBtnBR, nBTN0_replay_sequence,
+=======
+				 input SimonBtnTL, SimonBtnTR, SimonBtnBL, SimonBtnBR, nBTN0_step_state,
+>>>>>>> origin/master
 				 input clk, reset);
 	
 	// State-machine variables.
@@ -10,13 +14,19 @@ module simon(output [7:0] lcd_data, segments_n,
 				  RANDOMIZE = 1,
 				  SIMON_PLAY = 2,
 				  SIMON_REST = 3,
+<<<<<<< HEAD
 				  SIMON_RESET = 4,
 				  PLAYER_WIN_SOUND = 5,
+=======
+				  SIMON_CHECK = 4,
+				  SIMON_NEXT = 5,
+>>>>>>> origin/master
 				  PLAYER_INIT = 6,
 				  PLAYER_ENTRY = 7,
 				  PLAYER_RELEASE = 8,
 				  PLAYER_CHECK = 9,
 				  PLAYER_LOSE = 10;
+<<<<<<< HEAD
 	
 	localparam BUTTON1 = 1, 
 				  BUTTON2 = 2, 
@@ -28,6 +38,10 @@ module simon(output [7:0] lcd_data, segments_n,
 				  BUTTON8 = 8;
 	
 	reg [7:0] state, next_state, btn_state, btn_next_state;
+=======
+				  
+	reg [7:0] state, next_state;
+>>>>>>> origin/master
 	
 	// LCD Variables.
 	reg [8*16-1:0] topline, bottomline;
@@ -38,9 +52,14 @@ module simon(output [7:0] lcd_data, segments_n,
 	// Random sequence memory for both simon and human.
 	wire [1:0] random;
 	reg [7:0] playedSimonBtnCounter, playedPlayerBtnCounter;
+<<<<<<< HEAD
 	reg stepPlay, stepGuessed, rerun, randomize, stepGuessed_en, secondTimer_reset;
 	//wire step = stepPlay | stepGuessed;
 	wire step = stepPlay | stepGuessed_en;
+=======
+	reg stepPlay, stepGuessed, rerun, randomize, stepGuessed_en;
+	wire step = stepPlay | stepGuessed;
+>>>>>>> origin/master
 
 	// Buttons, color.
 	reg [1:0] lastBtn;
@@ -60,7 +79,10 @@ module simon(output [7:0] lcd_data, segments_n,
 	// Keep track of score.
 	reg [7:0] scoreCounter;
 	reg scoreCounter_en, playedSimonBtnCounter_en, playedPlayerBtnCounter_en;
+<<<<<<< HEAD
 	reg scoreCounter_reset, playedSimonBtnCounter_reset, playedPlayerBtnCounter_reset;
+=======
+>>>>>>> origin/master
 	wire [3:0] ones, tens;
 	reg [3:0] testCounter;
 	wire [7:0] bcdOnes, bcdTens;
@@ -105,6 +127,7 @@ module simon(output [7:0] lcd_data, segments_n,
 					topline    <= "SIMON_REST......";
 					bottomline <= {"Your Score:   ", displayScore};
 					lcd_string_print <= 1;
+<<<<<<< HEAD
 				end else if (state == SIMON_RESET) begin
 					topline    <= "SIMON_RESET.....";
 					bottomline <= {"Your Score:   ", displayScore};
@@ -113,6 +136,8 @@ module simon(output [7:0] lcd_data, segments_n,
 					topline    <= "PLAYER_WIN......";
 					bottomline <= {"Your Score:   ", displayScore};
 					lcd_string_print <= 1;
+=======
+>>>>>>> origin/master
 				end else if (state == PLAYER_INIT) begin
 					topline    <= "PLAYER_INIT.....";
 					bottomline <= {"Your Score:   ", displayScore};
@@ -142,6 +167,7 @@ module simon(output [7:0] lcd_data, segments_n,
 			end
 			
 			// Only run timer for seconds if we are not in randomize and secondTimer < 50000000.
+<<<<<<< HEAD
 			secondTimer <= secondTimer < 50000000 && (state != RANDOMIZE) && !secondTimer_reset ? secondTimer + 1 : 0;
 			
 			// Step if we have just finished playing a tone.
@@ -165,6 +191,18 @@ module simon(output [7:0] lcd_data, segments_n,
 				playedPlayerBtnCounter <= playedPlayerBtnCounter + playedPlayerBtnCounter_en;
 			end
 			
+=======
+			secondTimer <= secondTimer < 50000000 && (state != RANDOMIZE) ? secondTimer + 1 : 0;
+			
+			// Step if we have just finished playing a tone.
+			stepPlay <= !(secondTimer < 50000000) && (state == SIMON_PLAY) ? 1 : 0;
+			stepGuessed <= stepGuessed_en;
+			
+			if (tlPressed) testCounter <= testCounter + 1;
+//			if (scoreCounter_en) scoreCounter <= scoreCounter + 1;
+//			if (playedSimonBtnCounter_en) playedSimonBtnCounter <= playedSimonBtnCounter + 1;
+//			if (playedPlayerBtnCounter_en) playedPlayerBtnCounter <= playedPlayerBtnCounter + 1;
+>>>>>>> origin/master
 		end
 		
 	end
@@ -194,16 +232,31 @@ module simon(output [7:0] lcd_data, segments_n,
 	//speaker speaker1(.speaker(speaker), .tone((state == PLAYER_WIN_SOUND || state == PLAYER_LOSE) ? btn_state - 1 : {1'b1, random}), .speaker_en((state == PLAYER_WIN_SOUND || state == PLAYER_LOSE && btn_state != IDLE) || speaker_en), .clk(clk));
 	speaker speaker1(.speaker(speaker), .tone((state == PLAYER_WIN_SOUND || state == PLAYER_LOSE) ? btn_state - 1 : {1'b1, random}), .speaker_en(speaker_en), .clk(clk));
 	
+<<<<<<< HEAD
+=======
+	// Random sequence generator.
+	//module PRNG (output [1:0] random, input step, rerun, randomize, clk, reset);
+	PRNG randomGenerator(.random(random), .step(step), .rerun(rerun), .randomize(randomize), .clk(clk), .reset(reset));
+	
+	//module speaker(output reg speaker, input [2:0] tone, input speaker_en, clk);
+	speaker speaker1(.speaker(speaker), .tone({1'b1, random}), .speaker_en(speaker_en), .clk(clk));
+	
+>>>>>>> origin/master
 	//module bcd(output reg [3:0] hundreds, tens, ones, input [7:0] number, input clk);
 	bcd bcd1(.hundreds(), .tens(tens), .ones(ones), .number(scoreCounter), .clk(clk));
 	
 	//module seg_ctrl(output [7:0] segments_n, output reg [3:0] anodes_n, input[3:0] D,C,B,A, input clk);
+<<<<<<< HEAD
 	seg_ctrl seg1(.segments_n(segments_n), .anodes_n(anodes), .D(playedSimonBtnCounter[3:0]),.C(state/*playedSimonBtnCounter[3:0]*/),.B(playedPlayerBtnCounter[7:4]), .A(playedPlayerBtnCounter[3:0]), .clk(clk));
+=======
+	seg_ctrl seg1(.segments_n(segments_n), .anodes_n(anodes), .D(playedSimonBtnCounter[7:4]),.C(playedSimonBtnCounter[3:0]),.B(playedPlayerBtnCounter[7:4]), .A(playedPlayerBtnCounter[3:0]), .clk(clk));
+>>>>>>> origin/master
 	
 	// STATE MACHINE BLOCK.
 	always @* begin
 		// Defaults.
 		next_state = state;
+<<<<<<< HEAD
 		btn_next_state = btn_state;
 		stepGuessed_en = 0;
 		rerun = 0;
@@ -224,6 +277,20 @@ module simon(output [7:0] lcd_data, segments_n,
 			//playedSimonBtnCounter = 0;
 			//playedPlayerBtnCounter = 0;
 			//scoreCounter = 0;
+=======
+		stepGuessed_en = 0;
+		rerun = 0;
+		speaker_en = 0;
+		randomize = tlHeld && state == RANDOMIZE;
+		playedSimonBtnCounter = playedSimonBtnCounter > 0 ? playedSimonBtnCounter : 0;
+		playedPlayerBtnCounter = playedPlayerBtnCounter > 0 ? playedPlayerBtnCounter : 0;
+		scoreCounter = scoreCounter > 0 ? scoreCounter : 0;
+		
+		if (reset) begin
+			playedSimonBtnCounter = 0;
+			playedPlayerBtnCounter = 0;
+			scoreCounter = 0;
+>>>>>>> origin/master
 			lastBtn = 0;
 		end
 		else begin
@@ -235,7 +302,10 @@ module simon(output [7:0] lcd_data, segments_n,
 				RANDOMIZE: begin
 					if (~tlHeld) begin
 						next_state = SIMON_PLAY;
+<<<<<<< HEAD
 						secondTimer_reset = 1;
+=======
+>>>>>>> origin/master
 					end
 				end
 				
@@ -243,8 +313,12 @@ module simon(output [7:0] lcd_data, segments_n,
 					if (playedSimonBtnCounter <= scoreCounter) begin
 						// play tone
 						// shift for next tone 
+<<<<<<< HEAD
 						//playedSimonBtnCounter = playedSimonBtnCounter + stepPlay; //Add one to our count of how many buttons we have played so far.
 						playedSimonBtnCounter_en = stepPlay;
+=======
+						playedSimonBtnCounter = playedSimonBtnCounter + step; //Add one to our count of how many buttons we have played so far.
+>>>>>>> origin/master
 						speaker_en = secondTimer < (50000000 / 4) * 3; //only turn on speaker for 3/4 second.
 					end
 					else begin
@@ -253,6 +327,7 @@ module simon(output [7:0] lcd_data, segments_n,
 				end
 				
 				SIMON_REST: begin
+<<<<<<< HEAD
 					playedSimonBtnCounter_reset = 1; //reset counter
 					next_state = PLAYER_INIT;
 				end
@@ -267,25 +342,44 @@ module simon(output [7:0] lcd_data, segments_n,
 					
 					//Next state should be success and play tone
 					rerun = 1; // reset the sequence generator
+=======
+					playedSimonBtnCounter = 0; //reset counter
+					next_state = PLAYER_INIT;
+				end
+				
+				SIMON_CHECK: begin
+				end
+				
+				SIMON_NEXT: begin
+>>>>>>> origin/master
 				end
 				
 				PLAYER_INIT: begin
 					// initally the player hasn't made any guesses.
 					// we want to rerun our random generator, so set rerun to 1.
+<<<<<<< HEAD
 					playedPlayerBtnCounter_reset = 1;
+=======
+					playedPlayerBtnCounter = 0;
+>>>>>>> origin/master
 					rerun = 1;
 					next_state = PLAYER_ENTRY;
 				end
 				
 				PLAYER_ENTRY: begin
 					// if a button is held, then save it.
+<<<<<<< HEAD
 					//if (nBTN0_step_state) begin
+=======
+					if (nBTN0_step_state) begin
+>>>>>>> origin/master
 						if (enable) begin
 							// save last button
 							lastBtn = btnColor[1:0];
 							next_state = PLAYER_RELEASE;
 							speaker_en = 1;
 						end
+<<<<<<< HEAD
 						else begin
 							if (nBTN0_replay_sequence && playedPlayerBtnCounter == 0) begin
 								next_state = SIMON_PLAY;
@@ -293,21 +387,33 @@ module simon(output [7:0] lcd_data, segments_n,
 							end
 						end
 					//end
+=======
+					end
+>>>>>>> origin/master
 				end
 				
 				PLAYER_RELEASE: begin
 					// if we have had the button they pressed released, 
 					// then progress to check if it was correct.
 					speaker_en = 1;
+<<<<<<< HEAD
 					//if (nBTN0_step_state) begin
 						if (~enable) begin
 							next_state = PLAYER_CHECK;
 						end
 					//end
+=======
+					if (nBTN0_step_state) begin
+						if (~enable) begin
+							next_state = PLAYER_CHECK;
+						end
+					end
+>>>>>>> origin/master
 				end
 				
 				PLAYER_CHECK: begin
 					// correct guess.
+<<<<<<< HEAD
 					//if (nBTN0_step_state) begin
 						if (lastBtn == random) begin
 							playedPlayerBtnCounter_en = 1;
@@ -320,10 +426,26 @@ module simon(output [7:0] lcd_data, segments_n,
 								next_state = PLAYER_WIN_SOUND;
 								btn_next_state = IDLE;
 								secondTimer_reset = 1;
+=======
+					if (nBTN0_step_state) begin
+						if (lastBtn == random) begin
+							playedPlayerBtnCounter = playedPlayerBtnCounter + 1;
+							stepGuessed_en = 1;
+							// if we still have more buttons to guess, then loop back to accept more guesses.
+							if (playedPlayerBtnCounter <= scoreCounter) begin
+								next_state = PLAYER_ENTRY;
+							end
+							else begin
+								// end of correct sequence, so add to our score and reset for the larger sequence.
+								scoreCounter = scoreCounter + 1; // incrementing our score.
+								next_state = SIMON_PLAY; // start playing the sequence again.
+								rerun = 1; // reset the sequence generator.
+>>>>>>> origin/master
 							end
 						end
 						else begin
 							next_state = PLAYER_LOSE;
+<<<<<<< HEAD
 							btn_next_state = IDLE;
 							secondTimer_reset = 1;
 						end
@@ -414,6 +536,19 @@ module simon(output [7:0] lcd_data, segments_n,
 						end
 					endcase
 				end
+=======
+						end
+					end
+				end
+				
+				PLAYER_LOSE: begin
+					// play losing tone, reset game.
+					
+					next_state = IDLE;
+					
+				end
+				
+>>>>>>> origin/master
 		  endcase
 		end
 	end
@@ -437,11 +572,17 @@ module simon(output [7:0] lcd_data, segments_n,
 		
 		if (reset) begin
 			state <= IDLE;
+<<<<<<< HEAD
 			btn_state <= BUTTON5;
 		end
 		else begin
 			state <= next_state;
 			btn_state <= btn_next_state;
+=======
+		end
+		else begin
+			state <= next_state;
+>>>>>>> origin/master
 		end
 	end
 
